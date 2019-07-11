@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html class="x-admin-sm" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>权限列表</title>
+    <header th:replace="header::html"></header>
+</head>
+<body>
+<div class="x-nav">
+          <span class="layui-breadcrumb">
+            <a href="">首页</a>
+            <a href="">演示</a>
+            <a>
+              <cite>导航元素</cite></a>
+          </span>
+    <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right"
+       onclick="location.reload()" title="刷新">
+        <i class="layui-icon layui-icon-refresh" style="line-height:30px"></i>
+    </a>
+</div>
+<div class="layui-fluid">
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <div class="layui-btn-group">
+                        <button class="layui-btn" id="btn-expand">全部折叠</button>
+                        <button class="layui-btn" permission="sys:menu:add" onclick="xadmin.open('新增权限','/permission/add',700)">添加权限</button>
+                    </div>
+                    <table class="layui-hide" id="menuTable" lay-filter="member"></table>
+                    <script type="text/html" id="barDemo">
+                        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+                        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    var renderTable;
+    layui.config({
+        base: '/'
+    }).extend({
+        treetable: 'treetable-lay/treetable'
+    }).use(['treetable'], function () {
+        var table = layui.table;
+        var $ = layui.jquery;
+        var treetable = layui.treetable;
+        // 渲染表格
+        renderTable = function () {
+            treetable.render({
+                treeColIndex: 1,             // 树形图标显示在第几列
+                treeSpid: 0,                 // 最上级的父级id
+                treeIdName: 'id',            // id字段的名称
+                treePidName: 'parentId',     // pid字段名称
+                // treeDefaultClose: true,   // 是否默认折叠
+                treeLinkage: true,           // 父级展开时是否自动展开所有子级
+                elem: '#menuTable',
+                url: '/permission/menuAll',
+                // cellMinWidth: 80,
+                cols: [
+                    [
+                        {type: 'numbers'},
+                        {field: 'name', title: '名称'},
+                        {field: 'href', title: 'url'},
+                        {field: 'sort', title: '排序'},
+                        {field: 'permission', title: '资源标识'},
+                        {
+                            field: 'type', title: '类型', templet: function (d) {
+                                return d.type == '1' ? "菜单" : "按钮";
+                            }
+                        },
+                        {title: '操作', toolbar: '#barDemo'}
+                    ]
+                ]
+            });
+        };
+        renderTable();
+
+        var croll = false;
+        $("#btn-expand").click(function () {
+            if (croll) {
+                treetable.expandAll("#menuTable");
+                $("#btn-expand").html("全部折叠");
+                croll = false
+            } else {
+                treetable.foldAll("#menuTable");
+                $("#btn-expand").html("全部展开");
+                croll = true;
+            }
+        });
+
+        //监听工具条
+        table.on('tool(member)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'del') {
+                layer.confirm('确定删除？', function (index) {
+                    $.ajax({
+                        url: "/permission/delete",
+                        type: "GET",
+                        data: {id: data.id},
+                        dataType: 'json',
+                        success: function (result) {
+                            if (result.code == 500) {
+                                layer.msg(result.msg);
+                            } else {
+                                layer.alert("删除成功", {icon: 1}, function (index1) {
+                                    layer.close(index1);
+                                    xadmin.father_reload();
+                                });
+                            }
+                        }
+                    });
+                });
+            } else if (obj.event === 'edit') {
+                xadmin.open('编辑权限信息', '/permission/edit/?id=' + data.id, 700);
+            }
+        });
+        checkPermission();
+    });
+
+</script>
+</html>

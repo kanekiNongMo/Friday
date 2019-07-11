@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html class="x-admin-sm" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>用户列表</title>
+    <header th:replace="header::html"></header>
+</head>
+<body>
+<div class="x-nav">
+          <span class="layui-breadcrumb">
+            <a href="">首页</a>
+            <a href="">演示</a>
+            <a>
+              <cite>导航元素</cite></a>
+          </span>
+    <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right"
+       onclick="location.reload()" title="刷新">
+        <i class="layui-icon layui-icon-refresh" style="line-height:30px"></i></a>
+</div>
+<div class="layui-fluid">
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body ">
+                    <form class="layui-form layui-col-space5">
+                        <div class="layui-inline layui-show-xs-block">
+                            <input type="text" name="username" placeholder="请输入用户名" autocomplete="off"
+                                   class="layui-input">
+                        </div>
+                        <div class="layui-inline layui-show-xs-block">
+                            <button class="layui-btn" lay-submit="" lay-filter="search"><i
+                                    class="layui-icon">&#xe615;</i></button>
+                        </div>
+                    </form>
+                </div>
+                <div class="layui-card-body">
+                    <script type="text/html" id="toolbarDemo">
+                        <div class="layui-btn-container">
+                            <button class="layui-btn layui-btn-danger" permission="sys:user:del"
+                                    lay-event="getCheckData">批量删除
+                            </button>
+                            <button class="layui-btn layui-btn-sm" onclick="xadmin.open('添加用户','/user/add',700)"
+                                    permission="sys:user:add">添加用户
+                            </button>
+                        </div>
+                    </script>
+                    <table class="layui-hide" id="table" lay-filter="member"></table>
+                    <script type="text/html" id="barDemo">
+                        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+                        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    layui.use(['table', 'laydate', 'form'], function () {
+        var laydate = layui.laydate;
+        var form = layui.form;
+        var table = layui.table;
+        checkPermission();
+        //监听提交
+        form.on('submit(search)', function (data) {
+            var username = data.field.username;
+            table.render({
+                elem: '#table'
+                , url: '/user/findUserByFuzzyUserName' //数据接口
+                , toolbar: '#toolbarDemo'
+                , page: true //开启分页
+                , cellMinWidth: 80
+                , where: {
+                    "username": username
+                }
+                , response: {
+                    countName: 'count',
+                    dataName: 'datas' //规定数据列表的字段名称，默认：data
+                }
+                , cols: [
+                    [ //表头
+                        {type: 'checkbox'},
+                        {field: 'id', title: 'ID', sort: true},
+                        {field: 'username', title: '用户名', sort: true},
+                        {field: 'nickname', title: '别名', sort: true},
+                        {field: 'phone', title: '手机'},
+                        {field: 'email', title: '邮箱'},
+                        {field: 'birthday', title: '出生年月', sort: true},
+                        {
+                            field: 'sex', title: '性别', templet: function (d) {
+                                return d.sex == '1' ? '男' : '女';
+                            }
+                        },
+                        {
+                            field: 'status', title: '状态', templet: function (d) {
+                                return d.status == '1' ? '启动' : '禁用';
+                            }
+                        },
+                        {field: 'createTime', title: '创建时间', sort: true},
+                        {field: 'updateTime', title: '修改时间', sort: true},
+                        {fixed: 'right', title: '操作', minWidth: 140, toolbar: '#barDemo'}
+                    ]
+                ]
+            });
+            return false;
+        });
+
+        table.render({
+            elem: '#table'
+            , url: '/user/list' //数据接口
+            , page: true //开启分页
+            , toolbar: '#toolbarDemo'
+            , cellMinWidth: 80
+            , response: {
+                countName: 'count',
+                dataName: 'datas' //规定数据列表的字段名称，默认：data
+            }
+            , cols: [
+                [ //表头
+                    {type: 'checkbox'},
+                    {field: 'id', title: 'ID', sort: true},
+                    {field: 'username', title: '用户名', sort: true},
+                    {field: 'nickname', title: '别名', sort: true},
+                    {field: 'phone', title: '手机'},
+                    {field: 'email', title: '邮箱'},
+                    {field: 'birthday', title: '出生年月', sort: true},
+                    {
+                        field: 'sex', title: '性别', templet: function (d) {
+                            return d.sex == '1' ? '男' : '女';
+                        }
+                    },
+                    {
+                        field: 'status', title: '状态', templet: function (d) {
+                            return d.status == '1' ? '启动' : '禁用';
+                        }
+                    },
+                    {field: 'createTime', title: '创建时间', sort: true},
+                    {field: 'updateTime', title: '修改时间', sort: true},
+                    {fixed: 'right', title: '操作', minWidth: 140, toolbar: '#barDemo'}
+                ]
+            ]
+        });
+
+        table.on('tool(member)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'del') {
+                layer.confirm('确定删除?', function (index) {
+                    $.ajax({
+                        url: "/user/delete",
+                        type: 'GET',
+                        data: {id: data.id},
+                        dataType: 'json',
+                        success: function (result) {
+                            layer.alert("删除成功", {icon: 1}, function (index1) {
+                                layer.close(index1);
+                                // xadmin.father_reload();
+                                table.reload("table")
+                            })
+                        }
+                    });
+                });
+            } else if (obj.event === 'edit') {
+                xadmin.open('编辑用户信息', '/user/edit?id=' + data.id, 700);
+            }
+        });
+
+        //头工具栏事件
+        table.on('toolbar(member)', function (obj) {
+            var checkStatus = table.checkStatus(obj.config.id);
+            var data = checkStatus.data;
+            if (!data.length > 0) {
+                layer.msg('请至少选择一项', {icon: 1});
+                return;
+            }
+            var ids = [];
+            data.forEach(function (j, i) {
+                ids.push(j.id);
+            });
+            if (obj.event === 'getCheckData') {
+                layer.confirm('确定删除?', function (index) {
+                    $.ajax({
+                        url: "/user/delete",
+                        type: 'POST',
+                        data: 'ids=' + ids,
+                        dataType: 'json',
+                        success: function (result) {
+                            layer.alert("删除成功", {icon: 6}, function (index1) {
+                                layer.close(index1);
+                                // xadmin.father_reload();
+                                table.reload("table")
+                            })
+                        }
+                    });
+                });
+            }
+        });
+
+        laydate.render({
+            elem: '#start' //指定元素
+        });
+
+        laydate.render({
+            elem: '#end' //指定元素
+        });
+        checkPermission();
+    });
+</script>
+</html>

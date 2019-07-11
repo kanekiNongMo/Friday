@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sxbang.friday.dao.RoleDao">
+    <sql id="Base_Column_List_one">
+        id,name,description,createTime,updateTime
+    </sql>
+    <sql id="Base_Column_List_two">
+        name,description,createTime,updateTime
+    </sql>
+    <sql id="Base_Column_List_three">
+        <where>
+            <if test="name != null">
+                <bind name="roleName" value="'%'+name+'%'"/>
+                r.name like #{roleName}
+            </if>
+        </where>
+    </sql>
+    <!--查询所有角色信息-->
+    <select id="getAllRoleByPage" resultType="com.sxbang.friday.model.SysRole">
+        select
+        <include refid="Base_Column_List_one"/>
+        from sys_role r order by r.id limit #{startPosition}, #{limit}
+    </select>
+    <!--新增角色信息-->
+    <insert id="saveRole" parameterType="com.sxbang.friday.model.SysRole" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_role(<include refid="Base_Column_List_two"/>)
+        values(#{name}, #{description}, now(), now())
+    </insert>
+    <!--根据id查询角色信息-->
+    <select id="getRoleById" parameterType="Integer" resultType="com.sxbang.friday.model.SysRole">
+        select
+        <include refid="Base_Column_List_one"/>
+        from sys_role where id = #{id}
+    </select>
+    <!--根据角色名称模糊查询角色数量信息-->
+    <select id="getRoleByFuzzyRoleName" resultType="Integer">
+        select count(*) from sys_role r
+        <include refid="Base_Column_List_three"/>
+    </select>
+    <!--根据角色名称模糊查询角色信息-->
+    <select id="getRoleByFuzzyRoleNameByPage" resultType="com.sxbang.friday.model.SysRole">
+        select
+        <include refid="Base_Column_List_one"/>
+        from sys_role r
+        <include refid="Base_Column_List_three"/>
+        limit #{startPosition}, #{limit}
+    </select>
+    <!--根据id修改角色信息-->
+    <update id="updateRole" parameterType="com.sxbang.friday.model.SysRole">
+        update sys_role r
+        <set>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            <if test="description != null">
+                description = #{description},
+            </if>
+            updateTime = #{updateTime}
+        </set>
+        where r.id = #{id}
+    </update>
+    <!--根据id批量删除角色信息-->
+    <delete id="batchDeleteRoleById">
+        delete from sys_role where id in
+        <foreach collection="array" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+    </delete>
+</mapper>

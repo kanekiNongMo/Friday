@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sxbang.friday.dao.PermissionDao">
+    <sql id="Base_Column_List_one">
+        id,parentId,name,css,href,type,permission,sort
+    </sql>
+
+    <sql id="Base_Column_List_two">
+        parentId,name,css,href,type,permission,sort
+    </sql>
+
+    <!--查询所有权限信息-->
+    <select id="findAllPermission" resultType="com.sxbang.friday.model.SysPermission">
+        select
+        <include refid="Base_Column_List_one"/>
+        from sys_permission
+    </select>
+
+    <!--根据角色id查询权限信息-->
+    <select id="listByRoleId" resultType="com.sxbang.friday.model.SysPermission" parameterType="Integer">
+        select
+        <include refid="Base_Column_List_one"/>
+        from sys_permission p inner join sys_role_permission rp on p.id = rp.permissionId
+        where rp.roleId = #{roleId} order by p.sort
+    </select>
+
+    <!--新增权限信息-->
+    <insert id="savePermission" parameterType="com.sxbang.friday.model.SysPermission" useGeneratedKeys="true"
+            keyProperty="id">
+        insert into sys_permission(<include refid="Base_Column_List_two"/>)
+        values(#{parentId}, #{name}, #{css}, #{href}, #{type}, #{permission}, #{sort})
+    </insert>
+
+    <!--根据id查询权限信息-->
+    <select id="getPermissionById" resultType="com.sxbang.friday.model.SysPermission" parameterType="Integer">
+        select
+        <include refid="Base_Column_List_one"/>
+        from sys_permission
+        where id = #{id}
+    </select>
+    <!--修改权限信息-->
+    <update id="updatePermission" parameterType="com.sxbang.friday.model.SysRoleUser">
+        update sys_permission
+        <set>
+            <if test="parentId != null">
+                parentId = #{parentId},
+            </if>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            <if test="css != null">
+                css = #{css},
+            </if>
+            <if test="href != null">
+                href = #{href},
+            </if>
+            <if test="type != null">
+                type = #{type},
+            </if>
+            <if test="permission != null">
+                permission = #{permission},
+            </if>
+            <if test="sort != null">
+                sort = #{sort}
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过用户id查询权限-->
+    <select id="listByUserId" parameterType="Integer" resultType="com.sxbang.friday.model.SysPermission">
+        select distinct
+        <include refid="Base_Column_List_one"/>
+        from sys_role_user sru
+            inner join sys_role_permission srp on sru.roleId = srp.roleId
+            left join sys_permission sp on srp.permissionId = sp.id
+        where sru.userId = #{userId}
+    </select>
+</mapper>

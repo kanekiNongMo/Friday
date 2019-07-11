@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sxbang.friday.dao.RoleUserDao">
+    <!--根据用户id修改用户角色信息-->
+    <update id="updateSysRoleUser" parameterType="com.sxbang.friday.model.SysRoleUser">
+        update sys_role_user ru
+        <set>
+            <if test="roleId != null">
+                roleId = #{roleId}
+            </if>
+        </set>
+        where ru.userId = #{userId}
+    </update>
+
+    <!--根据用户id批量删除用户角色信息-->
+    <delete id="batchDeleteRoleUserByUserId">
+        delete from sys_role_user where userId in
+        <foreach collection="array" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+    </delete>
+
+    <!--根据用户id查询用户角色信息-->
+    <select id="listAllSysRoleUserByRoleIds" resultType="com.sxbang.friday.model.SysRoleUser">
+        select userId, roleId from sys_role_user where roleId in
+        <foreach collection="array" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+    </select>
+</mapper>

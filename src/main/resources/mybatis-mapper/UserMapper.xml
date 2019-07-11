@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sxbang.friday.dao.UserDao">
+    <sql id="Base_Column_List_one">
+        id,username,password,nickname,headImgUrl,phone,email,birthday,sex,status,createTime,updateTime
+    </sql>
+
+    <sql id="Base_Column_List_two">
+        username,password,nickname,headImgUrl,phone,email,birthday,sex,status,createTime,updateTime
+    </sql>
+
+    <sql id="Base_Column_List_three">
+        <where>
+            <if test="username != null">
+                <bind name="userName" value="'%'+username+'%'"/>
+                u.username like #{userName}
+            </if>
+        </where>
+    </sql>
+
+    <!--查询所有用户信息-->
+    <select id="getAllUserByPage" resultType="com.sxbang.friday.model.SysUser">
+        select
+        <include refid="Base_Column_List_one"/>
+        from sys_user u order by u.id limit #{startPosition}, #{limit}
+    </select>
+
+    <!--新增用户信息-->
+    <insert id="saveUser" parameterType="com.sxbang.friday.model.SysUser" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_user(<include refid="Base_Column_List_two"/>)
+        values(#{username}, #{password}, #{nickname}, #{headImgUrl}, #{phone}, #{email}, #{birthday}, #{sex}, #{status},
+        now(), now())
+    </insert>
+
+    <!--根据id查询用户信息-->
+    <select id="getUserById" parameterType="Integer" resultType="com.sxbang.friday.model.SysUser">
+        select
+        <include refid="Base_Column_List_one"/>
+        from sys_user where id = #{id}
+    </select>
+
+    <!--根据username查询用户信息-->
+    <select id="getUserByUserName" resultType="com.sxbang.friday.model.SysUser" parameterType="String">
+        select
+        <include refid="Base_Column_List_one"/>
+        from sys_user u where u.username = #{username}
+    </select>
+
+    <!--根据id修改用户信息-->
+    <update id="updateUser" parameterType="com.sxbang.friday.model.SysUser">
+        update sys_user u
+        <set>
+            <if test="username != null">
+                username = #{username},
+            </if>
+            <if test="password != null">
+                password = #{password},
+            </if>
+            <if test="nickname != null">
+                nickname = #{nickname},
+            </if>
+            <if test="headImgUrl != null">
+                headImgUrl = #{headImgUrl},
+            </if>
+            <if test="phone != null">
+                phone = #{phone},
+            </if>
+            <if test="email != null">
+                email = #{email},
+            </if>
+            <if test="birthday != null">
+                birthday = #{birthday},
+            </if>
+            <if test="sex != null">
+                sex = #{sex},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            updateTime = #{updateTime}
+        </set>
+        where u.id = #{id}
+    </update>
+
+    <!--根据用户名称模糊查询用户信息-->
+    <select id="getUserByFuzzyUserName" resultType="Integer">
+        select count(*) from sys_user u
+        <include refid="Base_Column_List_three"/>
+    </select>
+
+    <!--根据用户名称模糊查询用户信息-->
+    <select id="getUserByFuzzyUserNameByPage" resultType="com.sxbang.friday.model.SysUser">
+        select
+        <include refid="Base_Column_List_one"/>
+        from sys_user u
+        <include refid="Base_Column_List_three"/>
+        limit #{startPosition}, #{limit}
+    </select>
+
+    <!--根据id批量删除用户信息-->
+    <delete id="batchDeleteUserById">
+        delete from sys_user where id in
+        <foreach collection="array" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+    </delete>
+</mapper>
